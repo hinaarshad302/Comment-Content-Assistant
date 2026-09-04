@@ -60,14 +60,19 @@ with st.sidebar:
         "or emojis into social media content."
     )
 
-    st.write("**Features:**")
+    st.write("### Features")
 
     st.write("• Topic → Content")
     st.write("• Comment → Content")
     st.write("• Emoji → Content")
-    st.write("• Multiple platforms")
-    st.write("• Multiple languages")
-    st.write("• AI-generated hashtags")
+    st.write("• Facebook")
+    st.write("• Instagram")
+    st.write("• LinkedIn")
+    st.write("• X/Twitter")
+    st.write("• English")
+    st.write("• Urdu")
+    st.write("• Roman Urdu")
+    st.write("• Download generated post")
 
 
 # =========================================================
@@ -167,32 +172,26 @@ language = st.selectbox(
 
 
 # =========================================================
-# DYNAMIC USER INPUT
+# DYNAMIC INPUT
 # =========================================================
 
 if mode == "Topic → Content":
 
     input_label = "Topic / Idea"
 
-    placeholder = (
-        "Example: AI tools for students"
-    )
+    placeholder = "Example: AI tools for students"
 
 elif mode == "Comment → Content":
 
     input_label = "Comment"
 
-    placeholder = (
-        "Example: AI is changing education."
-    )
+    placeholder = "Example: AI is changing education."
 
 else:
 
     input_label = "Emojis"
 
-    placeholder = (
-        "Example: 🚀 🤖 💡"
-    )
+    placeholder = "Example: 🚀 🤖 💡"
 
 
 user_input = st.text_area(
@@ -213,7 +212,7 @@ cta = st.text_input(
 
 
 # =========================================================
-# GENERATE BUTTON
+# GENERATE CONTENT
 # =========================================================
 
 if st.button(
@@ -222,7 +221,7 @@ if st.button(
 ):
 
     # -----------------------------------------------------
-    # CHECK USER INPUT
+    # CHECK INPUT
     # -----------------------------------------------------
 
     if not user_input.strip():
@@ -241,7 +240,7 @@ if st.button(
     prompt = f"""
 You are an expert social media content writer.
 
-Create ONE complete and engaging social media post.
+Create ONE complete, natural and engaging social media post.
 
 USER SETTINGS:
 
@@ -273,40 +272,38 @@ Call-to-action:
 PLATFORM GUIDELINES:
 
 Facebook:
-Make the post conversational, engaging,
-and suitable for Facebook users.
+Create a conversational and engaging post.
+Encourage comments and interaction.
 
 Instagram:
-Make the post attractive, concise,
-visual, engaging, and hashtag-friendly.
+Make the content attractive, concise,
+visual and hashtag-friendly.
 
 LinkedIn:
-Make the post professional,
-useful, informative, and insight-focused.
+Make the content professional,
+useful, informative and insight-focused.
 
 X/Twitter:
-Make the post concise, punchy,
-clear, and easy to read.
+Make the content concise, punchy,
+clear and easy to read.
 
 
-LANGUAGE RULE:
+LANGUAGE GUIDELINES:
 
-Write the complete content in the selected language.
+If language is English:
+Write natural English.
 
-If the selected language is Urdu,
-write natural Urdu using Urdu script.
+If language is Urdu:
+Write natural Urdu using Urdu script.
 
-If the selected language is Roman Urdu,
-write Urdu using Roman/English letters.
-
-If the selected language is English,
-write natural English.
+If language is Roman Urdu:
+Write Urdu using Roman/English letters.
 
 
 OUTPUT FORMAT:
 
 HOOK:
-Write a strong attention-grabbing opening.
+Write an attention-grabbing opening.
 
 CAPTION:
 Write the complete social media caption.
@@ -324,26 +321,27 @@ Do not add explanations outside this structure.
 
 
     # =====================================================
-    # GEMINI GENERATION WITH RETRY
+    # GEMINI INTERACTIONS API
     # =====================================================
 
-    with st.spinner("✨ Creating your content..."):
+    result = None
+    last_error = None
 
-        result = None
-        last_error = None
+
+    with st.spinner("✨ Creating your content..."):
 
         for attempt in range(3):
 
             try:
 
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash-lite",
-                    contents=prompt
+                interaction = client.interactions.create(
+                    model="gemini-3.5-flash-lite",
+                    input=prompt
                 )
 
-                if response and response.text:
+                if interaction.output_text:
 
-                    result = response.text.strip()
+                    result = interaction.output_text.strip()
 
                     break
 
@@ -356,6 +354,7 @@ Do not add explanations outside this structure.
                 last_error = str(e)
 
                 error_text = str(e).upper()
+
 
                 # Retry temporary errors
                 if (
@@ -371,11 +370,12 @@ Do not add explanations outside this structure.
 
                         continue
 
+
                 break
 
 
     # =====================================================
-    # SHOW RESULT
+    # DISPLAY RESULT
     # =====================================================
 
     if result:
@@ -392,7 +392,7 @@ Do not add explanations outside this structure.
 
 
         # -------------------------------------------------
-        # DOWNLOAD
+        # DOWNLOAD BUTTON
         # -------------------------------------------------
 
         st.download_button(
@@ -405,7 +405,7 @@ Do not add explanations outside this structure.
 
 
     # =====================================================
-    # ERROR
+    # ERROR MESSAGE
     # =====================================================
 
     else:
@@ -421,6 +421,5 @@ Do not add explanations outside this structure.
             )
 
         st.info(
-            "Please wait a few seconds and try again. "
-            "Temporary Gemini service limits can sometimes occur."
+            "Please wait a few seconds and try again."
         )
