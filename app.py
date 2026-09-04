@@ -1,42 +1,52 @@
 import streamlit as st
 from google import genai
 
+# Page settings
 st.set_page_config(
     page_title="Comment & Emoji-to-Content Assistant",
     page_icon="✨",
     layout="centered"
 )
 
+# Title
 st.title("✨ Comment & Emoji-to-Content Assistant")
-st.write("Turn a topic, comment, or emojis into a ready-to-post social media caption.")
+st.write(
+    "Turn a topic, comment, or emojis into a ready-to-post social media post."
+)
 
-# ---------- Gemini client ----------
+# Gemini API key
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
 except Exception:
     api_key = ""
 
 if not api_key:
-    st.error("Gemini API key is missing. Add GEMINI_API_KEY to Streamlit Secrets.")
+    st.error(
+        "Gemini API key is missing. Add GEMINI_API_KEY to Streamlit Secrets."
+    )
     st.stop()
 
 client = genai.Client(api_key=api_key)
 
-# ---------- Sidebar ----------
+# Sidebar
 with st.sidebar:
     st.header("About")
     st.write(
-        "Choose your content settings, enter a topic/comment/emojis, "
-        "and Gemini will create a complete social-media post."
+        "Choose your content settings, enter your idea, "
+        "and Gemini will create a complete social media post."
     )
-    st.info("Your API key should be stored in Streamlit Secrets, not in this file.")
 
-# ---------- Inputs ----------
+# Input mode
 mode = st.selectbox(
     "Input mode",
-    ["Topic → Content", "Comment → Content", "Emoji → Content"]
+    [
+        "Topic → Content",
+        "Comment → Content",
+        "Emoji → Content"
+    ]
 )
 
+# Content type
 content_type = st.selectbox(
     "Content type",
     [
@@ -46,26 +56,34 @@ content_type = st.selectbox(
         "Question Post",
         "Storytelling Post",
         "Announcement",
-        "Motivational Post",
-    ],
+        "Motivational Post"
+    ]
 )
 
+# Platform
 platform = st.selectbox(
     "Platform",
-    ["Facebook", "Instagram", "LinkedIn", "X/Twitter"]
+    [
+        "Facebook",
+        "Instagram",
+        "LinkedIn",
+        "X/Twitter"
+    ]
 )
 
-audience = st.selectbox(
+# Target audience
+target_audience = st.selectbox(
     "Target audience",
     [
         "Students",
         "Professionals",
         "Business Owners",
         "Entrepreneurs",
-        "General Audience",
-    ],
+        "General Audience"
+    ]
 )
 
+# Tone
 tone = st.selectbox(
     "Tone",
     [
@@ -76,96 +94,126 @@ tone = st.selectbox(
         "Educational",
         "Emotional",
         "Persuasive",
-        "Casual",
-    ],
+        "Casual"
+    ]
 )
 
+# Language
 language = st.selectbox(
     "Language",
-    ["English", "Urdu", "Roman Urdu"]
+    [
+        "English",
+        "Urdu",
+        "Roman Urdu"
+    ]
 )
 
+# Dynamic input
 if mode == "Topic → Content":
-    label = "Topic / Idea"
+    input_label = "Topic / Idea"
     placeholder = "Example: AI tools for students"
+
 elif mode == "Comment → Content":
-    label = "Comment"
+    input_label = "Comment"
     placeholder = "Example: AI is changing education."
+
 else:
-    label = "Emojis"
+    input_label = "Emojis"
     placeholder = "Example: 🚀 🤖 💡"
 
-input_text = st.text_area(label, placeholder=placeholder, height=120)
+user_input = st.text_area(
+    input_label,
+    placeholder=placeholder,
+    height=120
+)
 
+# Optional CTA
 cta = st.text_input(
-    "Optional call-to-action",
+    "Optional Call-to-Action",
     placeholder="Example: What do you think?"
 )
 
-# ---------- Generate ----------
+# Generate button
 if st.button("✨ Generate Content", use_container_width=True):
-    if not input_text.strip():
-        st.warning(f"Please enter a {label.lower()} first.")
+
+    if not user_input.strip():
+        st.warning(
+            f"Please enter a {input_label.lower()} first."
+        )
         st.stop()
 
     prompt = f"""
 You are an expert social media content writer.
 
-Create ONE complete social-media post using these settings:
+Create ONE complete social media post using these settings:
 
 Input mode: {mode}
-User input: {input_text}
+User input: {user_input}
 Content type: {content_type}
 Platform: {platform}
-Target audience: {audience}
+Target audience: {target_audience}
 Tone: {tone}
 Language: {language}
-Preferred CTA: {cta if cta.strip() else "Create a suitable CTA"}
+CTA: {cta if cta.strip() else "Create a suitable call-to-action"}
 
-Platform rules:
-- Facebook: conversational and engagement-focused.
-- Instagram: attractive, concise, visual, and hashtag-friendly.
-- LinkedIn: professional, useful, and insight-focused.
-- X/Twitter: concise, punchy, and easy to read.
+Platform guidelines:
+
+Facebook:
+Make it conversational and engagement-focused.
+
+Instagram:
+Make it attractive, concise, visual, and hashtag-friendly.
+
+LinkedIn:
+Make it professional, useful, and insight-focused.
+
+X/Twitter:
+Make it concise, punchy, and easy to read.
 
 Return ONLY this structure:
 
 HOOK:
-[attention-grabbing opening]
+Write an attention-grabbing opening.
 
 CAPTION:
-[complete post caption]
+Write the complete social media caption.
 
 CTA:
-[short call to action]
+Write a short call-to-action.
 
 HASHTAGS:
-[5-10 relevant hashtags]
+Write 5 to 10 relevant hashtags.
 
 Use natural emojis where appropriate.
-Do not explain your answer.
+Do not add explanations outside this structure.
 """
 
     with st.spinner("Creating your content..."):
+
         try:
-           response = client.models.generate_content(
-    model="gemini-3.6-flash",
-    contents=prompt
-)
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt
+            )
+
             result = response.text.strip()
 
             st.success("Content generated successfully!")
-            st.markdown("### 📝 Your Post")
+
+            st.subheader("📝 Your Generated Post")
+
             st.markdown(result)
 
             st.download_button(
-                "⬇️ Download Post",
+                label="⬇️ Download Post",
                 data=result,
                 file_name="generated_social_post.txt",
                 mime="text/plain",
-                use_container_width=True,
+                use_container_width=True
             )
 
         except Exception as e:
-            st.error(f"Could not generate content. Please check your API key and try again.")
+
+            st.error("Could not generate content.")
+
             st.caption(f"Error: {e}")
