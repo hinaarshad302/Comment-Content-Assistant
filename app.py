@@ -152,7 +152,6 @@ Do not explain your answer.
     model="gemini-3.6-flash",
     contents=prompt
 )
-            )
             result = response.text.strip()
 
             st.success("Content generated successfully!")
